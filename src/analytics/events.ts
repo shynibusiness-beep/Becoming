@@ -6,6 +6,10 @@
  * 1. No free text. Every property is a number, a boolean or a value from a
  *    closed union. A goal title or journal entry can therefore not be sent to
  *    an analytics vendor even by accident (PRIVACY in the project spec).
+ *    Events without properties use `EmptyPayload`, not `{}` or
+ *    `Record<never, never>` — those are assignable from *any* object, so
+ *    `track('onboarding_started', { title: 'private text' })` would compile
+ *    and the guarantee would be void.
  * 2. Event names are a closed union, so renaming one is a compile error rather
  *    than a silently broken dashboard.
  */
@@ -21,9 +25,18 @@ export type AuthMethod = 'email_otp' | 'google' | 'apple';
 /** Property values an event is allowed to carry. */
 export type AnalyticsPropertyValue = string | number | boolean;
 
+/**
+ * Payload for an event that carries no properties.
+ *
+ * `Record<string, never>` rejects every property, because each value would
+ * have to be `never`. `Record<never, never>` resolves to `{}`, which accepts
+ * any object — see the privacy rule above.
+ */
+export type EmptyPayload = Record<string, never>;
+
 export interface AnalyticsEventMap {
   signup_completed: { method: AuthMethod };
-  onboarding_started: Record<never, never>;
+  onboarding_started: EmptyPayload;
   onboarding_completed: { stepCount: number };
   focus_created: { actionType: ActionType; frequencyPerWeek: number };
   first_action_completed: { source: EvidenceSource };

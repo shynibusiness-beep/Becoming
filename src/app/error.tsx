@@ -10,9 +10,17 @@ import { logger } from '@/lib/logging/logger';
 /**
  * Route level error boundary.
  *
- * Shows `AppError.userMessage` when we produced the error ourselves, and a
- * neutral fallback otherwise — a raw exception message could contain internal
- * detail and must never reach the UI.
+ * The `isAppError` branch only ever matches errors thrown in *client*
+ * components: Next.js sanitises anything thrown while rendering on the server
+ * before it crosses to this boundary, so the prototype and `userMessage` are
+ * gone and only a generic message plus `digest` survive. Server failures
+ * therefore always render the neutral fallback, which is the correct outcome —
+ * a raw exception message could carry internal detail and must never reach the
+ * UI.
+ *
+ * This is why expected server-side failures are *returned* as
+ * `Result<T, AppError>` rather than thrown: a thrown one cannot carry its copy
+ * to the user. Throwing stays reserved for genuinely unexpected failures.
  */
 export default function RouteError({
   error,

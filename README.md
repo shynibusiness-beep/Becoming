@@ -129,6 +129,13 @@ Domain- und Service-Funktionen werfen nicht, sondern liefern
 `Result<T, AppError>`. Jeder Aufrufer muss den Fehlerfall behandeln — das ist
 der Punkt.
 
+Das ist keine Stilfrage: Ein serverseitig geworfener `AppError` erreicht die
+Client-Error-Boundary **nicht** intakt. Next.js ersetzt ihn durch einen
+generischen `Error` mit `digest`, `userMessage` ist dort also verloren
+(empirisch im Production-Build geprüft). Eine erwartbare Server-Fehlermeldung
+muss deshalb als `Result` zurückgegeben werden. Werfen bleibt unerwarteten
+Fehlern vorbehalten — dort ist die generische Meldung ohnehin die richtige.
+
 ### Logging und Privacy
 
 `logger` nimmt einen stabilen Event-Namen und einen Kontext aus Primitiven.
@@ -142,6 +149,12 @@ Lint-Regel verboten, `process.env` außerhalb von `src/lib/env/` ebenfalls.
 Properties), nicht die Anbindung. Implementiert ist nur ein No-op. Das Typsystem
 lässt keine Freitext-Properties zu — ein Ziel-Titel kann also gar nicht
 versehentlich an einen Analytics-Anbieter gehen.
+
+Events ohne Properties nutzen `EmptyPayload` (`Record<string, never>`), nicht
+`{}` oder `Record<never, never>`: Letztere sind von _jedem_ Objekt aus
+zuweisbar und würden die Garantie aushebeln. Ein Compile-Time-Test in
+`analytics.test.ts` hält das fest — weicht der Typ wieder auf, schlägt
+`npm run typecheck` fehl.
 
 ### Design Tokens
 

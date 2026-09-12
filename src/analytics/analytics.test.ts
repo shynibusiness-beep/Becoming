@@ -37,6 +37,20 @@ describe('analytics contract', () => {
   it('covers every event named in the ANALYTICS CONTRACT', () => {
     expect(ANALYTICS_EVENT_NAMES).toHaveLength(14);
   });
+
+  it('rejects free text on an event that carries no properties', () => {
+    // A compile-time regression test: `npm run typecheck` includes this file,
+    // so if the payload type ever widens back to something `{}`-like, the
+    // expect-error directive below stops matching and the typecheck fails.
+    // `Record<never, never>` had exactly that hole.
+    // @ts-expect-error — no property may be attached to this event.
+    track('onboarding_started', { title: 'Ich möchte ruhiger werden' });
+
+    // The legitimate call still compiles.
+    track('onboarding_started', {});
+
+    expect(true).toBe(true);
+  });
 });
 
 describe('noop analytics client', () => {

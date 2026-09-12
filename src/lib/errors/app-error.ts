@@ -21,6 +21,13 @@ export interface AppErrorOptions {
  *
  * `message` is for developers and logs. `userMessage` is the only string that
  * may be rendered to a user, which keeps internal detail out of the UI.
+ *
+ * An `AppError` thrown while rendering on the server does **not** reach the
+ * client error boundary intact — Next.js replaces it with a generic `Error`
+ * carrying only a `digest`, so `userMessage` is lost and `isAppError` is
+ * false there. Server code that wants its copy shown must return
+ * `Result<T, AppError>` and let the caller render `userMessage`; throwing is
+ * for unexpected failures, where generic copy is what we want anyway.
  */
 export class AppError extends Error {
   readonly code: ErrorCode;
