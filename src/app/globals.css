@@ -1,0 +1,331 @@
+@import 'tailwindcss';
+
+/* ==========================================================================
+   Design tokens
+   --------------------------------------------------------------------------
+   PROVISIONAL SYSTEM. No final brand palette is committed yet (see README).
+   The palette is a high quality neutral with one restrained accent.
+
+   Rules:
+   - Components consume SEMANTIC tokens (`bg-surface`, `text-muted`), never
+     raw palette values.
+   - Light is the base definition; dark only re-declares the semantic layer.
+   - Colour is never the sole carrier of information (see ACCESSIBILITY).
+   ========================================================================== */
+
+:root {
+  color-scheme: light;
+
+  /* --- Raw palette: neutrals (warm-cool balanced grey) ------------------- */
+  --palette-neutral-0: oklch(99.2% 0.002 264);
+  --palette-neutral-50: oklch(97.4% 0.003 264);
+  --palette-neutral-100: oklch(94.6% 0.004 264);
+  --palette-neutral-200: oklch(89.8% 0.006 264);
+  --palette-neutral-300: oklch(82.5% 0.008 264);
+  --palette-neutral-400: oklch(68.5% 0.011 264);
+  --palette-neutral-500: oklch(56.5% 0.013 264);
+  --palette-neutral-600: oklch(45.5% 0.014 264);
+  --palette-neutral-700: oklch(35.5% 0.015 264);
+  --palette-neutral-800: oklch(25.5% 0.014 264);
+  --palette-neutral-900: oklch(18.5% 0.012 264);
+  --palette-neutral-950: oklch(13.5% 0.01 264);
+  --palette-neutral-1000: oklch(9.5% 0.008 264);
+
+  /* --- Raw palette: accent (muted indigo — provisional) ------------------ */
+  --palette-accent-200: oklch(88% 0.055 278);
+  --palette-accent-300: oklch(79% 0.085 278);
+  --palette-accent-400: oklch(68% 0.115 278);
+  --palette-accent-500: oklch(58% 0.135 278);
+  --palette-accent-600: oklch(50% 0.14 278);
+  --palette-accent-700: oklch(42% 0.12 278);
+
+  /* --- Raw palette: status ---------------------------------------------- */
+  --palette-positive-500: oklch(56% 0.105 162);
+  --palette-positive-600: oklch(48% 0.1 162);
+  --palette-caution-500: oklch(66% 0.115 76);
+  --palette-caution-600: oklch(56% 0.115 76);
+  --palette-critical-500: oklch(56% 0.155 22);
+  --palette-critical-600: oklch(48% 0.15 22);
+
+  /* --- Semantic: surfaces ------------------------------------------------ */
+  --surface-canvas: var(--palette-neutral-50);
+  --surface-default: var(--palette-neutral-0);
+  --surface-raised: var(--palette-neutral-0);
+  --surface-sunken: var(--palette-neutral-100);
+  --surface-inverse: var(--palette-neutral-900);
+
+  /* --- Semantic: content ------------------------------------------------- */
+  --content-primary: var(--palette-neutral-900);
+  --content-secondary: var(--palette-neutral-600);
+  --content-muted: var(--palette-neutral-500);
+  --content-inverse: var(--palette-neutral-50);
+  --content-accent: var(--palette-accent-600);
+
+  /* --- Semantic: lines --------------------------------------------------- */
+  --line-subtle: var(--palette-neutral-200);
+  --line-default: var(--palette-neutral-300);
+  --line-strong: var(--palette-neutral-400);
+
+  /* --- Semantic: interactive --------------------------------------------- */
+  --accent-default: var(--palette-accent-600);
+  --accent-hover: var(--palette-accent-700);
+  --accent-soft: oklch(94% 0.025 278);
+  --accent-on: var(--palette-neutral-0);
+  --focus-ring: var(--palette-accent-500);
+
+  /* --- Semantic: status -------------------------------------------------- */
+  --status-positive: var(--palette-positive-600);
+  --status-caution: var(--palette-caution-600);
+  --status-critical: var(--palette-critical-600);
+
+  /* --- Radius ------------------------------------------------------------ */
+  --radius-xs: 0.25rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-full: 9999px;
+
+  /* --- Elevation (subtle, never decorative) ------------------------------ */
+  --elevation-1: 0 1px 2px oklch(0% 0 0 / 0.05);
+  --elevation-2: 0 1px 3px oklch(0% 0 0 / 0.06), 0 6px 16px oklch(0% 0 0 / 0.05);
+
+  /* --- Motion ------------------------------------------------------------ */
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 360ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+
+  /* --- Layout ------------------------------------------------------------ */
+  --layout-content-max: 34rem;
+  --layout-wide-max: 64rem;
+  --layout-gutter: 1.25rem;
+  --layout-bottom-nav-height: 4rem;
+  --layout-side-nav-width: 15rem;
+}
+
+/* Dark theme: system preference, unless the user explicitly chose light. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+
+    --surface-canvas: var(--palette-neutral-1000);
+    --surface-default: var(--palette-neutral-950);
+    --surface-raised: var(--palette-neutral-900);
+    --surface-sunken: var(--palette-neutral-1000);
+    --surface-inverse: var(--palette-neutral-50);
+
+    --content-primary: var(--palette-neutral-50);
+    --content-secondary: var(--palette-neutral-300);
+    --content-muted: var(--palette-neutral-400);
+    --content-inverse: var(--palette-neutral-900);
+    --content-accent: var(--palette-accent-300);
+
+    --line-subtle: oklch(100% 0 0 / 0.08);
+    --line-default: oklch(100% 0 0 / 0.14);
+    --line-strong: oklch(100% 0 0 / 0.24);
+
+    --accent-default: var(--palette-accent-400);
+    --accent-hover: var(--palette-accent-300);
+    --accent-soft: oklch(30% 0.055 278);
+    --accent-on: var(--palette-neutral-1000);
+    --focus-ring: var(--palette-accent-300);
+
+    --status-positive: var(--palette-positive-500);
+    --status-caution: var(--palette-caution-500);
+    --status-critical: var(--palette-critical-500);
+
+    --elevation-1: 0 1px 2px oklch(0% 0 0 / 0.4);
+    --elevation-2: 0 1px 3px oklch(0% 0 0 / 0.5), 0 6px 16px oklch(0% 0 0 / 0.4);
+  }
+}
+
+/* Explicit user choice wins over the system preference in both directions. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --surface-canvas: var(--palette-neutral-1000);
+  --surface-default: var(--palette-neutral-950);
+  --surface-raised: var(--palette-neutral-900);
+  --surface-sunken: var(--palette-neutral-1000);
+  --surface-inverse: var(--palette-neutral-50);
+
+  --content-primary: var(--palette-neutral-50);
+  --content-secondary: var(--palette-neutral-300);
+  --content-muted: var(--palette-neutral-400);
+  --content-inverse: var(--palette-neutral-900);
+  --content-accent: var(--palette-accent-300);
+
+  --line-subtle: oklch(100% 0 0 / 0.08);
+  --line-default: oklch(100% 0 0 / 0.14);
+  --line-strong: oklch(100% 0 0 / 0.24);
+
+  --accent-default: var(--palette-accent-400);
+  --accent-hover: var(--palette-accent-300);
+  --accent-soft: oklch(30% 0.055 278);
+  --accent-on: var(--palette-neutral-1000);
+  --focus-ring: var(--palette-accent-300);
+
+  --status-positive: var(--palette-positive-500);
+  --status-caution: var(--palette-caution-500);
+  --status-critical: var(--palette-critical-500);
+
+  --elevation-1: 0 1px 2px oklch(0% 0 0 / 0.4);
+  --elevation-2: 0 1px 3px oklch(0% 0 0 / 0.5), 0 6px 16px oklch(0% 0 0 / 0.4);
+}
+
+/* ==========================================================================
+   Tailwind theme bridge
+   `inline` is required so the utilities resolve the *current* value of the
+   custom property at runtime instead of freezing the light-mode value.
+   ========================================================================== */
+@theme inline {
+  --color-canvas: var(--surface-canvas);
+  --color-surface: var(--surface-default);
+  --color-raised: var(--surface-raised);
+  --color-sunken: var(--surface-sunken);
+  --color-inverse: var(--surface-inverse);
+
+  --color-ink: var(--content-primary);
+  --color-ink-secondary: var(--content-secondary);
+  --color-ink-muted: var(--content-muted);
+  --color-ink-inverse: var(--content-inverse);
+  --color-ink-accent: var(--content-accent);
+
+  --color-line: var(--line-default);
+  --color-line-subtle: var(--line-subtle);
+  --color-line-strong: var(--line-strong);
+
+  --color-accent: var(--accent-default);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-on: var(--accent-on);
+
+  --color-positive: var(--status-positive);
+  --color-caution: var(--status-caution);
+  --color-critical: var(--status-critical);
+
+  --radius-xs: var(--radius-xs);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+
+  --shadow-e1: var(--elevation-1);
+  --shadow-e2: var(--elevation-2);
+
+  --ease-standard: var(--ease-standard);
+  --ease-exit: var(--ease-exit);
+
+  /* System stack for now. A licensed brand typeface is a branding decision,
+     not an M0 decision — and this keeps the build free of network fetches. */
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+  --font-mono:
+    ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+
+  /* Generous, quiet typographic scale. */
+  --text-display: 2.25rem;
+  --text-display--line-height: 1.12;
+  --text-display--letter-spacing: -0.022em;
+  --text-title: 1.5rem;
+  --text-title--line-height: 1.22;
+  --text-title--letter-spacing: -0.016em;
+  --text-heading: 1.125rem;
+  --text-heading--line-height: 1.35;
+  --text-heading--letter-spacing: -0.01em;
+  --text-body: 1rem;
+  --text-body--line-height: 1.6;
+  --text-label: 0.875rem;
+  --text-label--line-height: 1.45;
+  --text-caption: 0.8125rem;
+  --text-caption--line-height: 1.45;
+  --text-overline: 0.75rem;
+  --text-overline--line-height: 1.35;
+  --text-overline--letter-spacing: 0.08em;
+}
+
+/* ==========================================================================
+   Base layer
+   ========================================================================== */
+@layer base {
+  * {
+    border-color: var(--line-subtle);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--surface-canvas);
+    color: var(--content-primary);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    min-height: 100dvh;
+  }
+
+  /* Visible focus for keyboard users, on every interactive element. */
+  :focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-xs);
+  }
+
+  /* Hairlines stay hairlines on high-DPI screens. */
+  hr {
+    border-color: var(--line-subtle);
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+}
+
+@layer utilities {
+  /* Screen-reader-only text, used for the textual alternatives that the
+     accessibility rules require (e.g. avatar state descriptions). */
+  .sr-only-focusable:not(:focus):not(:focus-within) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+}
+
+/* ==========================================================================
+   Reduced motion — honoured globally, not per component.
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
