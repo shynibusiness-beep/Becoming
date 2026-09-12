@@ -38,6 +38,28 @@ describe('analytics contract', () => {
     expect(ANALYTICS_EVENT_NAMES).toHaveLength(14);
   });
 
+  it('rejects a free string as an avatar milestone key', () => {
+    // Same compile-time guard as below, for the one event whose payload is a
+    // key rather than an enum-like value. `milestoneKey: string` would let any
+    // text reach an analytics vendor.
+
+    // Private free text must not be accepted.
+    // @ts-expect-error — only a known milestone key is allowed.
+    track('avatar_milestone_unlocked', { milestoneKey: 'Ich möchte ruhiger werden' });
+
+    // Nor may a plain `string`, even when its runtime value happens to be valid:
+    // widening the property type back to `string` must stay a compile error.
+    const untypedKey: string = 'growth_building';
+    // @ts-expect-error — the property type must be narrower than `string`.
+    track('avatar_milestone_unlocked', { milestoneKey: untypedKey });
+
+    // The known keys still compile.
+    track('avatar_milestone_unlocked', { milestoneKey: 'growth_building' });
+    track('avatar_milestone_unlocked', { milestoneKey: 'growth_stable' });
+
+    expect(true).toBe(true);
+  });
+
   it('rejects free text on an event that carries no properties', () => {
     // A compile-time regression test: `npm run typecheck` includes this file,
     // so if the payload type ever widens back to something `{}`-like, the

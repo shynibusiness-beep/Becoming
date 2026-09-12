@@ -22,6 +22,16 @@ export type RecommendationType =
 export type EvidenceSource = 'manual' | 'timer';
 export type AuthMethod = 'email_otp' | 'google' | 'apple';
 
+/**
+ * Avatar milestones that can currently be unlocked.
+ *
+ * A closed union, not a free string: the key travels to an analytics vendor,
+ * so it must not be able to carry anything the user wrote. The two values are
+ * the growth states that produce an unlock in the MVP (AVATAR MVP in the
+ * project spec) — new milestones are added here when they actually exist.
+ */
+export type AvatarMilestoneKey = 'growth_building' | 'growth_stable';
+
 /** Property values an event is allowed to carry. */
 export type AnalyticsPropertyValue = string | number | boolean;
 
@@ -56,7 +66,7 @@ export interface AnalyticsEventMap {
     toState: GrowthState;
     policyVersion: number;
   };
-  avatar_milestone_unlocked: { milestoneKey: string };
+  avatar_milestone_unlocked: { milestoneKey: AvatarMilestoneKey };
 }
 
 export type AnalyticsEventName = keyof AnalyticsEventMap;

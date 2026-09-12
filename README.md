@@ -129,12 +129,24 @@ Domain- und Service-Funktionen werfen nicht, sondern liefern
 `Result<T, AppError>`. Jeder Aufrufer muss den Fehlerfall behandeln — das ist
 der Punkt.
 
-Das ist keine Stilfrage: Ein serverseitig geworfener `AppError` erreicht die
-Client-Error-Boundary **nicht** intakt. Next.js ersetzt ihn durch einen
-generischen `Error` mit `digest`, `userMessage` ist dort also verloren
-(empirisch im Production-Build geprüft). Eine erwartbare Server-Fehlermeldung
-muss deshalb als `Result` zurückgegeben werden. Werfen bleibt unerwarteten
-Fehlern vorbehalten — dort ist die generische Meldung ohnehin die richtige.
+`Result<T, AppError>` ist die richtige Form **innerhalb** des Servers
+(Server Component → Service → Domain). An einer RSC→Client-Grenze gilt es
+nicht: `AppError` ist eine Klasseninstanz und kommt dort nicht an.
+
+- **Geworfen** beim Server-Rendering: Next.js ersetzt den Fehler durch einen
+  generischen `Error` mit `digest`; `userMessage` ist verloren und
+  `isAppError` ist falsch (empirisch im Production-Build geprüft).
+- **Zurückgegeben** als Server-Component-Prop oder Server-Action-Ergebnis:
+  React serialisiert nur Plain Objects und ein paar Built-ins und lehnt eine
+  Klasseninstanz ab. Ein `Result<T, AppError>` hilft nicht — der `AppError`
+  darin bleibt eine Instanz.
+
+Ein erwartbarer Serverfehler wird deshalb entweder **serverseitig behandelt**
+oder **vor der Grenze in serialisierbare, client-sichere Plain Data
+übersetzt**. Genau dafür existiert `AppError.toClientSafe()`: ein einfaches
+`{ code, message }`, dessen `message` die nutzerseitige `userMessage` ist.
+Werfen bleibt unerwarteten Fehlern vorbehalten — dort ist die generische
+Meldung ohnehin die richtige.
 
 ### Logging und Privacy
 

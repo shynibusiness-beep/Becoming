@@ -53,6 +53,7 @@ export type {
   AnalyticsEventName,
   ActionType,
   AuthMethod,
+  AvatarMilestoneKey,
   EmptyPayload,
   EvidenceSource,
   GrowthState,

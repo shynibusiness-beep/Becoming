@@ -18,9 +18,13 @@ import { logger } from '@/lib/logging/logger';
  * a raw exception message could carry internal detail and must never reach the
  * UI.
  *
- * This is why expected server-side failures are *returned* as
- * `Result<T, AppError>` rather than thrown: a thrown one cannot carry its copy
- * to the user. Throwing stays reserved for genuinely unexpected failures.
+ * An expected server-side failure therefore never relies on this boundary. It
+ * is either handled on the server, or converted to plain serialisable
+ * client-safe data — `AppError.toClientSafe()` yields a plain
+ * `{ code, message }` — before it crosses to the client. Returning a
+ * `Result<T, AppError>` across the boundary does not help: the `AppError`
+ * inside it is still a class instance and does not survive. Throwing stays
+ * reserved for genuinely unexpected failures.
  */
 export default function RouteError({
   error,
