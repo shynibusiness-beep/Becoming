@@ -16,6 +16,10 @@ describe('analytics contract', () => {
     // drifting away from the typed map would silently drop instrumentation.
     const namesFromMap: readonly (keyof AnalyticsEventMap)[] = [
       'signup_completed',
+      'sign_in_requested',
+      'sign_in_completed',
+      'sign_in_failed',
+      'sign_out_completed',
       'onboarding_started',
       'onboarding_completed',
       'focus_created',
@@ -35,7 +39,7 @@ describe('analytics contract', () => {
   });
 
   it('covers every event named in the ANALYTICS CONTRACT', () => {
-    expect(ANALYTICS_EVENT_NAMES).toHaveLength(14);
+    expect(ANALYTICS_EVENT_NAMES).toHaveLength(18);
   });
 
   it('rejects a free string as an avatar milestone key', () => {
@@ -56,6 +60,26 @@ describe('analytics contract', () => {
     // The known keys still compile.
     track('avatar_milestone_unlocked', { milestoneKey: 'growth_building' });
     track('avatar_milestone_unlocked', { milestoneKey: 'growth_stable' });
+
+    expect(true).toBe(true);
+  });
+
+  it('rejects a free string as an auth error code', () => {
+    // sign_in_failed reports why a sign-in failed. Bound to the closed
+    // AppError union so a raw provider message cannot ride along.
+    // @ts-expect-error — only an AppError code is allowed.
+    track('sign_in_failed', { method: 'email_otp', errorCode: 'AuthApiError: bad JWT' });
+
+    track('sign_in_failed', { method: 'email_otp', errorCode: 'RATE_LIMITED' });
+
+    expect(true).toBe(true);
+  });
+
+  it('never accepts an email address as an auth event property', () => {
+    // @ts-expect-error — the address is exactly what must not be sent.
+    track('sign_in_requested', { method: 'email_otp', email: 'someone@example.com' });
+
+    track('sign_in_requested', { method: 'email_otp' });
 
     expect(true).toBe(true);
   });

@@ -55,6 +55,7 @@ const config = [
       '*.config.mjs',
       'vitest.setup.ts',
       'e2e/**/*.ts',
+      'supabase/tests/**/*.ts',
     ],
     rules: {
       'no-restricted-syntax': 'off',

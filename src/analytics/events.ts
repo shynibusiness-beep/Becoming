@@ -14,6 +14,8 @@
  *    than a silently broken dashboard.
  */
 
+import type { ErrorCode } from '@/lib/errors/error-codes';
+
 export type GrowthState = 'starting' | 'building' | 'stable';
 export type ActionType = 'check_in' | 'timed';
 export type ReviewDifficulty = 'too_easy' | 'about_right' | 'too_difficult';
@@ -21,6 +23,9 @@ export type RecommendationType =
   'KEEP' | 'REDUCE_FREQUENCY' | 'INCREASE_FREQUENCY' | 'CHANGE_DAY' | 'PAUSE';
 export type EvidenceSource = 'manual' | 'timer';
 export type AuthMethod = 'email_otp' | 'google' | 'apple';
+
+/** Why a session ended. Never carries a token or an address. */
+export type SignOutReason = 'user_initiated' | 'session_expired';
 
 /**
  * Avatar milestones that can currently be unlocked.
@@ -46,6 +51,12 @@ export type EmptyPayload = Record<string, never>;
 
 export interface AnalyticsEventMap {
   signup_completed: { method: AuthMethod };
+  /** A sign-in link was requested. The address is deliberately not a property. */
+  sign_in_requested: { method: AuthMethod };
+  sign_in_completed: { method: AuthMethod };
+  /** `errorCode` is the closed AppError union — never a provider message. */
+  sign_in_failed: { method: AuthMethod; errorCode: ErrorCode };
+  sign_out_completed: { reason: SignOutReason };
   onboarding_started: EmptyPayload;
   onboarding_completed: { stepCount: number };
   focus_created: { actionType: ActionType; frequencyPerWeek: number };
@@ -86,6 +97,10 @@ export type AnalyticsEvent = {
 
 export const ANALYTICS_EVENT_NAMES = [
   'signup_completed',
+  'sign_in_requested',
+  'sign_in_completed',
+  'sign_in_failed',
+  'sign_out_completed',
   'onboarding_started',
   'onboarding_completed',
   'focus_created',

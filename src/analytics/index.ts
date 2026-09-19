@@ -59,6 +59,7 @@ export type {
   GrowthState,
   RecommendationType,
   ReviewDifficulty,
+  SignOutReason,
 } from './events';
 export { ANALYTICS_EVENT_NAMES } from './events';
 export { createNoopAnalyticsClient } from './noop-client';

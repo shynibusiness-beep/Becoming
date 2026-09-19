@@ -1,9 +1,11 @@
 /**
  * Type-only barrel.
  *
- * The clients are imported from their own modules on purpose:
- * `browser-client.ts` is a `'use client'` module and `server-client.ts` is
- * `server-only`, so re-exporting either here would let a wrong-side import
- * slip through as a valid module resolution.
+ * There is deliberately no browser client: every Supabase call in this
+ * application runs on the server, which is what lets the session cookie be
+ * `httpOnly` (see cookie-options.ts). The server client is imported from
+ * `./server-client` directly, which is a `server-only` module, so a wrong-side
+ * import is a build error rather than a runtime surprise.
  */
-export type { Database, Json } from './database.types';
+export type { Database, Json, OnboardingStateEnum } from './database.types';
+export { PROFILE_COLUMNS } from './database.types';

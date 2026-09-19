@@ -1,5 +1,7 @@
 import { expect, test, type ConsoleMessage, type Page } from '@playwright/test';
 
+import { signIn } from './support/sign-in';
+
 /** Fails the test on any console error, so a broken hydration cannot pass silently. */
 function trackConsoleErrors(page: Page): string[] {
   const errors: string[] = [];
@@ -13,6 +15,11 @@ function trackConsoleErrors(page: Page): string[] {
 }
 
 test.describe('application shell', () => {
+  // The shell is behind authentication from M1 on.
+  test.beforeEach(async ({ page }) => {
+    await signIn(page);
+  });
+
   test('root redirects to the daily view', async ({ page }) => {
     await page.goto('/');
     await expect(page).toHaveURL(/\/today$/);
@@ -130,6 +137,10 @@ test.describe('application shell', () => {
 });
 
 test.describe('layout adaptation', () => {
+  test.beforeEach(async ({ page }) => {
+    await signIn(page);
+  });
+
   test('mobile shows the bottom navigation', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/today');

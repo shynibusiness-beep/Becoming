@@ -6,6 +6,7 @@ import { cookies } from 'next/headers';
 
 import { publicEnv } from '@/lib/env/public';
 import { logger } from '@/lib/logging/logger';
+import { SUPABASE_COOKIE_OPTIONS } from './cookie-options';
 import type { Database } from './database.types';
 
 /**
@@ -24,6 +25,7 @@ export async function createSupabaseServerClient(): Promise<SupabaseClient<Datab
     publicEnv.NEXT_PUBLIC_SUPABASE_URL,
     publicEnv.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
     {
+      cookieOptions: SUPABASE_COOKIE_OPTIONS,
       cookies: {
         getAll: () => cookieStore.getAll(),
         setAll: (cookiesToSet) => {

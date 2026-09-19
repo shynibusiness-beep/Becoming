@@ -14,7 +14,8 @@ export default defineConfig({
     environment: 'node',
     setupFiles: ['./vitest.setup.ts'],
     include: ['src/**/*.test.ts'],
-    exclude: ['node_modules/**', '.next/**', 'e2e/**'],
+    // supabase/tests needs a real PostgreSQL and runs via vitest.db.config.ts.
+    exclude: ['node_modules/**', '.next/**', 'e2e/**', 'supabase/**'],
     clearMocks: true,
     coverage: {
       provider: 'v8',

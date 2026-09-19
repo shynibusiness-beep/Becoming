@@ -5,9 +5,9 @@ möchtest; die App übersetzt das in wenige konkrete Handlungen, speichert das
 tatsächlich Getane als Evidence und macht daraus über Wochen sichtbare
 Entwicklung.
 
-> **Status: Milestone 0 (Foundation).** Es gibt noch keine Produktfeatures —
-> nur das technische Fundament und eine responsive App-Shell mit ehrlichen
-> Empty States. Siehe [Roadmap](#roadmap).
+> **Status: Milestone 1 (Auth + Security Foundation).** Nutzer können sich
+> anmelden und besitzen ein privates Profil. Produktfeatures gibt es noch
+> keine. Siehe [Roadmap](#roadmap).
 
 ---
 
@@ -56,18 +56,19 @@ der auf ein Staging-Supabase-Projekt zeigt.
 
 ## Befehle
 
-| Befehl                  | Zweck                                        |
-| ----------------------- | -------------------------------------------- |
-| `npm run dev`           | Dev-Server                                   |
-| `npm run build`         | Production-Build (validiert das Environment) |
-| `npm run start`         | Production-Server                            |
-| `npm run lint`          | ESLint                                       |
-| `npm run typecheck`     | `tsc --noEmit`                               |
-| `npm run test`          | Unit-Tests (Vitest)                          |
-| `npm run test:coverage` | Unit-Tests mit Coverage                      |
-| `npm run e2e`           | End-to-End-Tests (Playwright, baut vorher)   |
-| `npm run format:check`  | Prettier-Prüfung                             |
-| `npm run verify`        | Alles oben in der CI-Reihenfolge             |
+| Befehl                  | Zweck                                                      |
+| ----------------------- | ---------------------------------------------------------- |
+| `npm run dev`           | Dev-Server                                                 |
+| `npm run build`         | Production-Build (validiert das Environment)               |
+| `npm run start`         | Production-Server                                          |
+| `npm run lint`          | ESLint                                                     |
+| `npm run typecheck`     | `tsc --noEmit`                                             |
+| `npm run test`          | Unit-Tests (Vitest)                                        |
+| `npm run test:coverage` | Unit-Tests mit Coverage                                    |
+| `npm run test:db`       | Datenbank-, RLS- und Cross-User-Tests (braucht PostgreSQL) |
+| `npm run e2e`           | End-to-End-Tests (Playwright, baut vorher)                 |
+| `npm run format:check`  | Prettier-Prüfung                                           |
+| `npm run verify`        | Alles oben in der CI-Reihenfolge                           |
 
 Playwright braucht einmalig `npx playwright install chromium`.
 
@@ -168,6 +169,65 @@ zuweisbar und würden die Garantie aushebeln. Ein Compile-Time-Test in
 `analytics.test.ts` hält das fest — weicht der Typ wieder auf, schlägt
 `npm run typecheck` fehl.
 
+### Auth
+
+Anmeldung per Magic Link / E-Mail-OTP, ohne Passwort:
+
+```
+/login  →  Server Action  →  Supabase sendet Link
+        →  /auth/confirm   →  verifyOtp  →  ensure_profile()  →  Zielroute
+```
+
+`/auth/callback` (PKCE-Code-Tausch) existiert für OAuth, ist in M1 aber ohne
+aktivierten Provider. Google bleibt bewusst aus, um M1 klein zu halten; das
+Aktivieren ist danach reine Konfiguration.
+
+**Routenschutz auf zwei Ebenen.** Der Proxy (`src/proxy.ts`) prüft jede Anfrage
+und leitet anonyme Besucher auf `/login?next=…` um. Zusätzlich liest das Layout
+der App-Gruppe die Session selbst — falls der Matcher je versehentlich
+eingeengt wird, rendert die Seite trotzdem nicht. Der Auth-Flow (`/auth/*`)
+bleibt in beiden Zuständen erreichbar; sonst würde der Proxy genau die Anfrage
+umleiten, die gerade anmeldet, und dabei einen Redirect-Loop erzeugen.
+
+**Session-Cookie.** `@supabase/ssr` setzt standardmäßig `httpOnly: false`, weil
+sein Browser-Client die Session aus `document.cookie` liest. Diese App benutzt
+diesen Client nicht — jeder Supabase-Aufruf läuft serverseitig — deshalb ist das
+Cookie hier `httpOnly`, `sameSite=lax` und außerhalb von `development` `secure`.
+Ein E2E-Test prüft das am ausgelieferten Cookie. `sameSite=strict` ginge nicht:
+der Link aus dem Mail-Programm ist eine Top-Level-Navigation fremder Herkunft.
+
+**Weiterleitungsziele.** Der `next`-Parameter reist durch den Anmeldelink und
+ist damit vollständig angreiferkontrolliert. `safeNextPath` lässt nur
+eindeutige Pfade derselben Origin durch und repariert nichts — ein
+Redirect-Ziel ist nichts, worüber man raten sollte.
+
+**Fehler.** Supabase-Meldungen erreichen nie das UI.
+`src/features/auth/auth-errors.ts` ist die einzige Stelle, an der ein
+Provider-Fehler zu Produkt-Copy wird; Unbekanntes wird generisch, nicht
+durchgereicht.
+
+### Datenmodell und Autorisierung
+
+`public.profiles` hält eine private Zeile pro Nutzer — ohne E-Mail, ohne Namen.
+Die Adresse lebt in `auth.users` und wird nicht kopiert.
+
+Autorisierung wird **ausschließlich** aus `auth.uid()` abgeleitet, nie aus einer
+Client-E-Mail, einer mitgesendeten `user_id` oder aus `user_metadata`. Zwei
+Ebenen setzen das durch:
+
+1. **Spalten-Grants.** `authenticated` besitzt `SELECT` und `UPDATE` nur auf
+   `(timezone, locale, onboarding_state)`. `id` und `created_at` fehlen
+   bewusst, ebenso `INSERT` und `DELETE`. Eine falsch geschriebene Policy
+   könnte daran nichts ändern.
+2. **RLS-Policies.** `SELECT` und `UPDATE` jeweils mit `auth.uid() = id`, das
+   `UPDATE` zusätzlich mit `WITH CHECK`, damit eine Zeile nicht auf einen
+   anderen Nutzer umgeschrieben werden kann. `anon` erhält gar keine Rechte.
+
+Profile werden serverseitig bereitgestellt: ein Trigger auf `auth.users` legt
+die Zeile bei der Registrierung an, `public.ensure_profile()` ist der
+idempotente Reparaturpfad. Die Funktion nimmt **kein** Argument — die Zeile
+kommt aus `auth.uid()`, ein fremdes Profil ist damit nicht adressierbar.
+
 ### Design Tokens
 
 `globals.css` definiert eine Palette, darüber eine semantische Ebene
@@ -203,15 +263,36 @@ Komponenten.
 
 ## Testing
 
-| Ebene       | Werkzeug         | Scope                                 |
-| ----------- | ---------------- | ------------------------------------- |
-| Unit        | Vitest (Node)    | Domain, `lib/`, Analytics, Validation |
-| Integration | pgTAP / Supabase | RLS, Ownership, Constraints (ab M1)   |
-| E2E         | Playwright       | Kritische Flows, Mobile + Desktop     |
+| Ebene     | Werkzeug                              | Scope                                    |
+| --------- | ------------------------------------- | ---------------------------------------- |
+| Unit      | Vitest (Node)                         | Domain, `lib/`, Analytics, Validation    |
+| Datenbank | Vitest + `pg` gegen echtes PostgreSQL | RLS, Ownership, Constraints, Migrationen |
+| E2E       | Playwright                            | Kritische Flows, Mobile + Desktop        |
 
 Vitest läuft bewusst ohne DOM-Umgebung: UI-Verhalten wird von Playwright in
 einem echten Browser geprüft, statt in einer jsdom-Näherung. Das hält die
 Abhängigkeiten klein und die Aussage der Tests ehrlich.
+
+**Die RLS-Tests laufen gegen eine echte Datenbank, nicht gegen Mocks.** Row
+Level Security ist ein PostgreSQL-Feature; ein Mock würde nur beweisen, dass
+der Mock sich so verhält, wie wir es uns vorgestellt haben. Die Suite baut die
+Datenbank vor jedem Lauf aus `supabase/migrations/` neu auf — das ist zugleich
+der Beweis, dass die Migrationen auf einer frischen Datenbank durchlaufen — und
+führt jede Abfrage so aus, wie PostgREST es tut: Rolle gesetzt, JWT-Claims in
+`request.jwt.claims`, alles in einer zurückgerollten Transaktion.
+
+```bash
+npm run test:db   # DATABASE_URL zeigt auf ein beliebiges PostgreSQL
+```
+
+`supabase/tests/bootstrap.sql` bildet die von Supabase verwalteten Teile nach
+(`auth.users`, `auth.uid()`, die Rollen `anon` / `authenticated` /
+`service_role`), die auf einem echten Projekt bereits existieren. Es ist
+ausdrücklich **keine** Migration.
+
+Die E2E-Suite stubt Supabase Auth an der Netzwerkgrenze
+(`e2e/support/auth-stub.ts`): Route-Handler, Supabase-Client und Cookie-Handling
+sind die echten, nur der gehostete Dienst wird ersetzt.
 
 ---
 
@@ -220,7 +301,7 @@ Abhängigkeiten klein und die Aussage der Tests ehrlich.
 | Milestone | Inhalt                                                                | Status            |
 | --------- | --------------------------------------------------------------------- | ----------------- |
 | **M0**    | Foundation: Toolchain, Tokens, Shell, Env, Errors, Analytics-Contract | **abgeschlossen** |
-| M1        | Auth, Profile, RLS, Ownership- und Cross-User-Tests                   | offen             |
+| **M1**    | Auth, Profile, RLS, Ownership- und Cross-User-Tests                   | **abgeschlossen** |
 | M2        | Identity, Goal, Action, versionierter Schedule, Onboarding            | offen             |
 | M3        | Occurrences, Today, Completion, Evidence (idempotent)                 | offen             |
 | M4        | Growth Engine (versionierte Policy), History, Timeline                | offen             |

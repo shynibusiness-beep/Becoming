@@ -4,6 +4,14 @@ const PORT = Number(process.env.E2E_PORT ?? 3100);
 const baseURL = process.env.E2E_BASE_URL ?? `http://127.0.0.1:${PORT}`;
 
 /**
+ * Supabase Auth is stubbed for the suite (see e2e/support/auth-stub.ts), so the
+ * app is built against the stub's URL — NEXT_PUBLIC_* is inlined at build time
+ * and cannot be swapped afterwards.
+ */
+const AUTH_STUB_PORT = Number(process.env.E2E_AUTH_STUB_PORT ?? 54331);
+const supabaseUrl = `http://127.0.0.1:${AUTH_STUB_PORT}`;
+
+/**
  * Escape hatch for images that ship their own Chromium (prebuilt CI runners,
  * air-gapped environments) instead of the build Playwright downloads. Unset in
  * normal development, where `npx playwright install chromium` is the path.
@@ -38,10 +46,17 @@ export default defineConfig({
       },
     },
   ],
+  globalSetup: './e2e/global-setup.ts',
   webServer: {
     command: `npm run build && npm run start -- --port ${PORT}`,
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
+    env: {
+      NEXT_PUBLIC_APP_STAGE: 'development',
+      NEXT_PUBLIC_SUPABASE_URL: supabaseUrl,
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_e2e_stub_key_000000',
+      NEXT_PUBLIC_ANALYTICS_PROVIDER: 'noop',
+    },
   },
 });
